@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  /* set the CSS */
+
+  body {
+    font: 12px Arial;
+  }
+
+  path {
+    stroke: steelblue;
+    stroke-width: 2;
+    fill: none;
+  }
+
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: grey;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+  }
+
+  td,
+  th {
+    padding: 1px 4px;
+  }
+</style>
+
+<body>
+
+  <!-- load the d3.js library -->
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+
+  <script>
+    var reader; //GLOBAL File Reader object for demo purpose only
+
+    /**
+     * Check for the various File API support.
+     */
+
+    function checkFileAPI() {
+      if (window.File && window.FileReader && window.FileList && window.Blob) {
+        reader = new FileReader();
+        console.log(reader);
+        return true;
+      } else {
+        alert('The File APIs are not fully supported by your browser. Fallback required.');
+        return false;
+      }
+    }
+
+    function readText(filePath) {
+      file = filePath;
+      var output = ""; //placeholder for text output
+      if (filePath.files && filePath.files[0]) {
+        reader.onload = function(e) {
+          output = e.target.result;
+          displayContents(output);
+        }; //end onload()
+        reader.readAsText(filePath.files[0]);
+      } //end if html5 filelist support
+      else if (ActiveXObject && filePath) { //fallback to IE 6-8 support via ActiveX
+        try {
+          reader = new ActiveXObject("Scripting.FileSystemObject");
+          var file = reader.OpenTextFile(filePath, 1); //ActiveX File Object
+          output = file.ReadAll(); //text contents of file
+          file.Close(); //close file "input stream"
+          displayContents(output);
+        } catch (e) {
+          if (e.number == -2146827859) {
+            alert('Unable to access local files due to browser security settings. ' +
+              'To overcome this, go to Tools->Internet Options->Security->Custom Level. ' +
+              'Find the setting for "Initialize and script ActiveX controls not marked as safe" and change it to "Enable" or "Prompt"');
+          }
+        }
+      } else { //this is where you could fallback to Java Applet, Flash or similar
+        return false;
+      }
+      return true;
+    }
+
+    // Set the dimensions of the canvas / graph
+    var margin = {
+        top: 10,
+        right: 10,
+        bottom: 10,
+        left: 10
+      },
+      // width = 40 - margin.left - margin.right,
+      // height = 40 - margin.top - margin.bottom;
+
+      width = 10, height = 10;
+
+    // Parse the date / time
+    var parseDate = d3.time.format("%d-%b-%y").parse;
+
+    // Set the ranges
+    var x = d3.time.scale().range([0, width]);
+    var y = d3.scale.linear().range([height, 0]);
+
+    // Define the axes
+    var xAxis = d3.svg.axis().scale(x)
+      .orient("bottom").ticks(5);
+
+    var yAxis = d3.svg.axis().scale(y)
+      .orient("left").ticks(5);
+
+    // Define the line
+    var valueline = d3.svg.line()
+      .x(function(d) {
+        return x(d.date1);
+      }) //  <= Change to date1
+      .y(function(d) {
+        return y(d.close);
+      });
+
+    // Adds the svg canvas
+    var svg = d3.select("body")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
+
+    // Get the data
+    // d3.tsv("data.tsv", function(error, data) {
+    d3.tsv(reader, function(error, data) {
+      // data.forEach(function(d) {
+      //   d.date1 = parseDate(d.date); //  <= Change to date1
+      //   d.close = +d.close;
+      // });
+
+      // Scale the range of the data
+      // x.domain(d3.extent(data, function(d) {
+      //   return d.date1;
+      // })); //<=date1
+      // y.domain([0, d3.max(data, function(d) {
+      //   return d.close;
+      // })]);
+
+      // Add the valueline path.
+      // svg.append("path")
+      //   .attr("class", "line")
+      //   .attr("d", valueline(data));
+
+      // Add the X Axis
+      // svg.append("g")
+      //   .attr("class", "x axis")
+      //   .attr("transform", "translate(0," + height + ")")
+      //   .call(xAxis);
+
+      // Add the Y Axis
+      // svg.append("g")
+      //   .attr("class", "y axis")
+      //   .call(yAxis);
+
+      // The table generation function
+      function tabulate(data, columns) {
+        var table = d3.select("body").append("table")
+          .attr("style", "margin-left: 50px"),
+          thead = table.append("thead"),
+          tbody = table.append("tbody");
+
+        // append the header row
+        thead.append("tr")
+          .selectAll("th")
+          .data(columns)
+          .enter()
+          .append("th")
+          .text(function(column) {
+            return column;
+          });
+
+        // create a row for each object in the data
+        var rows = tbody.selectAll("tr")
+          .data(data)
+          .enter()
+          .append("tr");
+
+        // create a cell in each row for each column
+        var cells = rows.selectAll("td")
+          .data(function(row) {
+            return columns.map(function(column) {
+              return {
+                column: column,
+                value: row[column]
+              };
+            });
+          })
+          .enter()
+          .append("td")
+          .attr("style", "font-family: Courier") // sets the font style
+          .html(function(d) {
+            return d.value;
+          });
+
+        return table;
+      }
+
+      // render the table
+      // var peopleTable = tabulate(data, ["dbSNP_ID", "Chr"]);
+      var peopleTable = tabulate(data, ["dbSNP_ID", "Chr", "POS", "REF", "ALT", "GENE", "AA", "TYPE", "REGION", "CADD", "FUNSEQ", "POLY_SIFT", "CONS", "TFBS", "DNASE", "CpG", "GWAS", "RMSK", "ncRNA_p-gene", "CLINICAL", "MAF",
+        "SampleFreq.HOM_REF", "SampleFreq.HET", "SampleFreq.HOM_ALT", "idx1", "idx2", "idx3", "idx4", "idx42", "idx44", "idx5", "idx6", "idx7"
+      ]);
+
+
+    });
+  </script>
+
+  <div id="container">
+    <input type="file" onchange='readText(this)' />
+    <br/>
+    <hr/>
+    <h3>VCF viewer</h3>
+    <div id="main">
+
+    </div>
+  </div>
+
+</body>
