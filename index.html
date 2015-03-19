@@ -42,7 +42,7 @@
     function checkFileAPI() {
       if (window.File && window.FileReader && window.FileList && window.Blob) {
         reader = new FileReader();
-        console.log(reader);
+        // console.log(reader);
         return true;
       } else {
         alert('The File APIs are not fully supported by your browser. Fallback required.');
@@ -90,7 +90,8 @@
       // width = 40 - margin.left - margin.right,
       // height = 40 - margin.top - margin.bottom;
 
-      width = 10, height = 10;
+      width = 10,
+      height = 10;
 
     // Parse the date / time
     var parseDate = d3.time.format("%d-%b-%y").parse;
@@ -125,37 +126,8 @@
         "translate(" + margin.left + "," + margin.top + ")");
 
     // Get the data
-    // d3.tsv("data.tsv", function(error, data) {
-    d3.tsv(reader, function(error, data) {
-      // data.forEach(function(d) {
-      //   d.date1 = parseDate(d.date); //  <= Change to date1
-      //   d.close = +d.close;
-      // });
-
-      // Scale the range of the data
-      // x.domain(d3.extent(data, function(d) {
-      //   return d.date1;
-      // })); //<=date1
-      // y.domain([0, d3.max(data, function(d) {
-      //   return d.close;
-      // })]);
-
-      // Add the valueline path.
-      // svg.append("path")
-      //   .attr("class", "line")
-      //   .attr("d", valueline(data));
-
-      // Add the X Axis
-      // svg.append("g")
-      //   .attr("class", "x axis")
-      //   .attr("transform", "translate(0," + height + ")")
-      //   .call(xAxis);
-
-      // Add the Y Axis
-      // svg.append("g")
-      //   .attr("class", "y axis")
-      //   .call(yAxis);
-
+    d3.tsv("data.tsv", function(error, data) {
+    // d3.tsv(reader, function(error, data) {
       // The table generation function
       function tabulate(data, columns) {
         var table = d3.select("body").append("table")
@@ -200,11 +172,9 @@
       }
 
       // render the table
-      // var peopleTable = tabulate(data, ["dbSNP_ID", "Chr"]);
       var peopleTable = tabulate(data, ["dbSNP_ID", "Chr", "POS", "REF", "ALT", "GENE", "AA", "TYPE", "REGION", "CADD", "FUNSEQ", "POLY_SIFT", "CONS", "TFBS", "DNASE", "CpG", "GWAS", "RMSK", "ncRNA_p-gene", "CLINICAL", "MAF",
         "SampleFreq.HOM_REF", "SampleFreq.HET", "SampleFreq.HOM_ALT", "idx1", "idx2", "idx3", "idx4", "idx42", "idx44", "idx5", "idx6", "idx7"
       ]);
-
 
     });
   </script>
